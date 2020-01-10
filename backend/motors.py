@@ -66,6 +66,38 @@ Seq = [[True,False],
 ##
 ##  # Wait before moving on
 ##  time.sleep(WaitTime)
+class PanTilt:
+    def __init__(self,interstep_delay=0.2,ranges=[180,180]):
+        self.interstep_delay = interstep_delay
+        self.ranges = ranges
+        #Instantiate the lower-level HAT controller device and set the angle to 0,0
+        dev = PCA9685()
+        dev.setPWMFreq(50)
+        dev.setRotationAngle(0, 0)
+        dev.setRotationAngle(1, 0)
+        self.dev = dev
+        self.angles = [0,0] #Indicate current 
+        return
+
+    def __del__(self):
+        dev.setRotationAngle(0, 0)
+        dev.setRotationAngle(1, 0)
+        del(self.dev)
+        return
+
+    def rotate(self, axis, steps):
+        future_angle = max(0,self.angles[axis] + steps)
+        future_angle = min(future_angle, self.ranges[axis])
+        if steps >= 0:
+            range_iter = range(self.angles[axis] + 1, future_angle + 1, 1)
+        else:
+            range_iter = range(self.angles[axis] - 1, future_angle - 1, -1)
+        for a in range_iter:
+            self.dev.setRotationAngle(axis,a)
+            time.sleep(self.interstep_delay)
+        self.angles[axis] = future_angle
+        return
+
   
 def pan(pantilthat, degrees):
     pantilthat.setRotationAngle(0, degrees)
